@@ -1,0 +1,105 @@
+#!/bin/bash
+#
+# Christian Winds
+# CSC 460 Operating Systems
+# Program Name: Snake
+# Program Description: Snake displays the user ID, full name, home phone, TTY,
+# 		       and current running command of logged in users, Dr.
+#		       Allen's CSC 460 class's users, or users in a command
+#		       line-specified list.
+# Program Path: /home/winds_ct/csc460/HW1/snake/snake
+# Submission Date: Tuesday, January 15th, 2019
+
+echo -e "USERID\t\tNAME\t\tPHONE\t\tTTY\t\tWHAT"
+
+if (test $# -eq 0) then
+	# Gather the information of logged in users
+	useridsloggedin=`who | cut -d" " -f1`
+	for x in $useridsloggedin
+	do
+		userid=$x
+		usercomment=`grep $x /etc/passwd | cut -d":" -f5`
+		fullname=`echo $usercomment | cut -d"," -f1`
+		homephone=`echo $usercomment | cut -d"," -f4`
+		tty=`who | grep $x | tr -s " " | cut -d" " -f2`
+
+		# Create a temporary file of w output to avoid accidental search
+		# duplicates
+		w > tmpWfile
+
+                # Create a truncated 8 character maximum user id to search the w
+                # command's output
+                truncateduserid=`echo $x | cut -c1-8`
+
+		what=`cat tmpWfile | grep $truncateduserid | cut -c65-`
+		rm tmpWfile
+
+		# Print the information of the current user
+		echo -e "$userid\t$fullname\t$homephone\t$tty\t$what"
+	done
+fi
+if (test "$1" = "all") then
+	# Gather the information of users from Dr. Allen's Operating Systems
+	# course
+        csc460userids=`grep "GOBEARS" /etc/passwd | cut -d":" -f1`
+        for x in $csc460userids
+        do
+                userid=$x
+                usercomment=`grep $x /etc/passwd | cut -d":" -f5`
+                fullname=`echo $usercomment | cut -d"," -f1`
+                homephone=`echo $usercomment | cut -d"," -f4`
+                tty=`who | grep $x | tr -s " " | cut -d" " -f2`
+		if (test "$tty" = "") then
+			tty="NOT ON"
+		fi
+
+		# Create a temporary file of w output to avoid accidental search
+		# duplicates
+		w > tmpWfile
+
+		# Create a truncated 8 character maximum user id to search the w
+		# command's output
+		truncateduserid=`echo $x | cut -c1-8`
+
+		what=`cat tmpWfile | grep $truncateduserid | cut -c65-`
+		rm tmpWfile
+
+		if (test "$what" = "") then
+                       what="-"
+                fi
+
+                # Print the information of the current user
+                echo -e "$userid\t$fullname\t$homephone\t$tty\t$what"
+	done
+else
+	# Gather the information of each user from the command line list
+        for x in $*
+        do
+                userid=`grep $x /etc/passwd | cut -d":" -f1`
+                usercomment=`grep $x /etc/passwd | cut -d":" -f5`
+                fullname=`echo $usercomment | cut -d"," -f1`
+                homephone=`echo $usercomment | cut -d"," -f4`
+                tty=`who | grep $x | tr -s " " | cut -d" " -f2`
+                if (test "$tty" = "") then
+                        tty="NOT ON"
+                fi
+
+		# Create a temporary file of w output to avoid accidental search
+		# duplicates
+		w > tmpWfile
+
+                # Create a truncated 8 character maximum user id to search the w
+                # command's output
+                truncateduserid=`echo $x | cut -c1-8`
+
+		what=`cat tmpWfile | grep $truncateduserid | cut -c65-`
+		rm tmpWfile
+
+                if (test "$what" = "") then
+                        what="-"
+                fi
+
+                # Print the information of the current user
+                echo -e "$userid\t$fullname\t$homephone\t$tty\t$what"
+	done
+fi
