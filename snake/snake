@@ -7,8 +7,7 @@
 # 		       and current running command of logged in users, Dr.
 #		       Allen's CSC 460 class's users, or users in a command
 #		       line-specified list.
-# Program Path: /home/winds_ct/csc460/HW1/snake/snake
-# Submission Date: Tuesday, January 15th, 2019
+# Submission Date: Wednesday, January 16th, 2019
 
 echo -e "USERID\t\tNAME\t\tPHONE\t\tTTY\t\tWHAT"
 
