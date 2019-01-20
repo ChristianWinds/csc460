@@ -1,0 +1,151 @@
+#!/bin/bash
+# Christian Winds
+# CSC 460 Operating Systems
+# Program Name: Peach Shell
+# Program Description: This shell provides limited bash shell use to users
+# Submission Date: Sunday, January 20th, 2019
+
+# Run the Peach shell until the user exits
+while (test "$instruction" != "peeloff")
+do
+	echo -n "Peaches> "
+	read instruction argument1 otherarguments
+	if (test "$instruction" = "peachcobbler") then
+		less $argument1
+	fi
+	if (test "$instruction" = "peachpal") then
+		usersPasswdCommentField=`grep $argument1 /etc/passwd | cut -d":" -f5`
+
+		# Print the searched user's full name
+		echo $usersPasswdCommentField | cut -d"," -f1
+
+		# Print the searched user's office phone number
+		echo $usersPasswdCommentField | cut -d"," -f3
+	fi
+	if (test "$instruction" = "peachers") then
+		# Create a list of logged in users
+		loggedInUserIDs=`who | cut -d" " -f1`
+
+		# Locate and print the logged in users' full names
+		for userID in $loggedInUserIDs
+		do
+			usersPasswdCommentField=`grep $userID /etc/passwd | cut -d":" -f5`
+	                # Print the full name of the current login list user
+	                echo $usersPasswdCommentField | cut -d"," -f1
+		done
+	fi
+	if (test "$instruction" = "cream") then
+		# Show the current directory items within a column
+		ls -C
+	fi
+	if (test "$instruction" = "peachfuzz") then
+		# Print a list of non-hidden shell commands
+		echo peachcobbler filename
+		echo peachpal userid
+		echo peachers
+		echo cream
+		echo peachfuzz
+		echo peachy
+		echo peachpie filename
+		echo snake
+		echo snake all
+		echo snake userid1 userid2 ...
+		echo peeloff
+	fi
+	if (test "$instruction" = "peachsmash") then
+		bash
+	fi
+	if (test "$instruction" = "peachy") then
+		clear
+		giftMessage="Here - a fresh peach for you!"
+		sleep 1
+		echo $giftMessage
+		sleep 1
+
+		# Give the user a fresh peach
+		freshPeach="*peachpeachpeachpeachpeachpea-hpe-chpeachpeachpeach\n
+			    peachpeachpeachpeach---chp--chp-achpeachpeachpeach\n
+			    peachpeachpeachpe-c-pea----ach-- chpeachpeachpehch\n
+			    peachpeachp------ac peach-each-----p------echpeach\n
+			    peachpeach-eachpeachpea--peachpeachpeachpe----each\n
+			    peachpeac-peachpeac----chpe----eachpeachpeach-- ch\n
+                	    peachpea-hpea-h-e-chpeachpeac---achpeachpeachp---h\n
+                	    peachpe-ch-eachpe-chpeachpeach---chpeachpeachp-- h\n
+                	    peachpe-chpeac---achpeachpeachpe--hpeachpeachp--ch\n
+			    peachpeachpea---eachpeachpeachpeachpeachpeach--ach\n
+			    peachpeachpe----eachpeachpeachpeachpeachpeach---ch\n
+			    peachpeachp----peachpeachpeachpeachpeachpeach--ach\n
+			    peachpeachp----peachpeachpeachpeachpeachpeac---ach\n
+			    peachpeachp-----ea---eachpeachpeachpeachpeac---ach\n
+			    peachpeachp-----each--achpeachpeachpeachpeac--each\n
+			    peachpeachpea-----chpea---eachpeachpeachpea--peach\n
+			    peachpeachpeac------peachpe--hpeachpeachpe---peach\n
+			    peachpeachpeachp-------chpeachp------achp---hpeach\n
+			    peachpeachpeachpeachpeach------ achpe-chpeachpeach\n
+			    peachpeachpeachpeachpeachpeachpeachpeachpeachpeach\n"
+		echo
+		echo -n -e $freshPeach
+		sleep 1.5
+		clear
+		
+                gonePeach="*peachpeachpeachpeachpeachpea-----chpeachpeachpeach\n
+                            peachpeachpeachpeach---chp------achpeachpeachpeach\n
+                            peachpeachpeachpe-c-pea--------- chpeachpeachpehch\n
+                            peachpeachp-------- peach----------p------echpeach\n
+                            peachpeach--------chpea-----------------------each\n
+                            peachpeac------peac---------------------------- ch\n
+                            peachpea---ea-h-e-ch-----------------------------h\n
+                            peachpe--h-eachpe------------------------------- h\n
+                            peachpe-chpeac----------------------------------ch\n
+                            peachpeachpea-----------------------------------ch\n
+                            peachpeachpe------------------------------------ch\n
+                            peachpeachp------------------------------------ach\n
+                            peachpeachp------------------------------------ach\n
+                            peachpeachp------------------------------------ach\n
+                            peachpeachp-----------------------------------each\n
+                            peachpeachpea--------------------------------peach\n
+                            peachpeachpeac-------------------------------peach\n
+                            peachpeachpeachp---------------------achp---hpeach\n
+                            peachpeachpeachpeachpeach------ achpe-chpeachpeach\n
+                            peachpeachpeachpeachpeachpeachpeachpeachpeachpeach\n"
+		echo $giftMessage
+		echo
+		echo -n -e $gonePeach
+
+		sleep 1
+
+		echo -n -e $freshPeach > AGift
+
+		sleep 0.3
+		echo
+		echo "(It's waiting for you outside the shell.)"
+		sleep 1
+		echo
+		echo "Now isn't that just peachy?"
+		echo
+	fi
+	if (test "$instruction" = "peachpie") then
+		vim $argument1
+	fi
+	if (test "$instruction" = "snake") then
+		# Print user information from snake as per the entered command
+		# line options
+		snake $argument1 $otherarguments
+	fi
+	if (test "$instruction" = "peeloff") then
+		echo Exiting peach shell...
+	fi
+
+	# Create a variable holding a command list without the bash access
+	# command
+	commandlist="peachcobbler peachpal peachers cream peachfuzz peachsmash peachy peachpie snake peeloff"
+
+	# Write a temporary command list file to check the entered command
+	echo $commandlist > temporaryCommandList
+	matchedInstruction=`grep -w "$instruction" temporaryCommandList`
+	rm temporaryCommandList
+
+	if (test "$matchedInstruction" = "") then
+		echo Not quite peachy... Try something else.
+	fi
+done
