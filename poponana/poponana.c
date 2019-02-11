@@ -13,6 +13,12 @@
 #include <sys/shm.h>
 #include <string.h>
 
+struct structPrintInfo
+{
+	char	name[5];
+	int	processNumber;
+};
+
 int main(int argc, char *argv[])
 {
 	// Check to ensure a command line argument was entered in the command
@@ -35,26 +41,28 @@ int main(int argc, char *argv[])
 	}
 
 	// Calculate the total number of processes to form
-	int maximumProcesses = 2 * N;
-
-	// Create an integer variable to track the process's designated number
-	int processNumber = 1;
-
-	// Convert the process number integer variable to a char string
-	char *processNumberChar;
-	sprintf(processNumberChar, "%d", processNumber);
-
-	// Create a char pointer to point toward the process number
-	char *processNumberPointer = (char*)processNumberChar;
+	//int maximumProcesses = 2 * N;
 
 	// Create a char array to hold the name associated with the process
 	char *processName = "Popo"; // * NOTE: May need correction	
 
+	// Create an integer variable to track the process's designated number
+	int processNumber = 1;
+
 	// Create a char string holding the line for the process to print
-	char *processPrintLine = strcat(processName, processNumberPointer); // * NOTE: May need correction
+	//char *processPrintLine = strcat(processName, processNumberPointer); // * NOTE: May need correction
+
+	// Create a struct to hold this process's information
+	struct structPrintInfo processInfo;
+
+	// Place this process's name into this process's process info struct
+	strcpy(processInfo.name, processName);
+
+	// Place this process's number into this process's process info struct
+	processInfo.processNumber = processNumber;
 
 	// Create shared memory for the processes to access
-	int sharedMemoryId = shmget(IPC_PRIVATE, 7*sizeof(char), 0764);
+	int sharedMemoryId = shmget(IPC_PRIVATE, sizeof(struct structPrintInfo), 0764);
 	if (sharedMemoryId == -1)
 	{
 		// Print an error message if shared memory could not be obtained
@@ -62,10 +70,13 @@ int main(int argc, char *argv[])
 		return(0);
 	}
 
-	// Write the print line for the first printing process to shared memory
-	char *ram;
-	ram = (char *) shmat(sharedMemoryId, NULL, SHM_RND);
-	strcpy(ram, processPrintLine);
+	printf("Shared memory created.\n"); // * DEBUG
+
+	// Write the information for the first printing process to shared memory
+	struct structPrintInfo *ram;
+	ram = (struct structPrintInfo *) shmat(sharedMemoryId, NULL, SHM_RND);
+	strcpy(ram -> name, "Popo");
+	ram -> processNumber = 1;
 
 	// Create an integer of the number of times each process should print
 	int printsRemaining = 5;
@@ -73,92 +84,118 @@ int main(int argc, char *argv[])
 	// Create an integer of the number of created processes
 	int createdProcesses = 1;
 
-	// Initialize the parent process's child process ID to zero
-	int pidOfProcessChild = 0;
+	// Initialize the parent process's child process ID to negative one
+	int pidOfProcessChild = -1;
 
-	// Create a char string of the name of the process that prints after the
-	// current process
-	char *nextProcessName = "Nana"; // * NOTE: May need to be corrected
-
-	// Create an int variable for the number of the process that prints after
+	// Create a struct with the information of the process to print after
 	// the current process
+	struct structPrintInfo nextProcessInfo;
+	strcpy(nextProcessInfo.name, "Nana");
+	nextProcessInfo.processNumber = 1;
+	// char *nextProcessName = "Nana"; // * NOTE: May need to be corrected
+
+	// Create an int variable for the number of the process that prints
+	// after the current process
 	int nextProcessNumber = processNumber;
 
 	// Convert the next process number integer variable to a char string
-	char *nextProcessNumberChar;
-	sprintf(nextProcessNumberChar, "%d", nextProcessNumber);
+	//char *nextProcessNumberChar;
+	//sprintf(nextProcessNumberChar, "%d", nextProcessNumber);
 
 	// Create a char pointer to point toward the process number
-	char *nextProcessNumberPointer = (char*)nextProcessNumberChar;
+	//char *nextProcessNumberPointer = (char*)nextProcessNumberChar;
 
 	// Create a char string to hold the instruction for which process begins
 	// printing after the current process
-	char nextProcessPrintLine = strcat(nextProcessName, (char*)nextProcessNumberPointer); // * NOTE: May need to be corrected
+	//char nextProcessPrintLine = strcat(nextProcessName, (char*)nextProcessNumberPointer); // * NOTE: May need to be corrected
 
 	// Create the requested number of processes
-	while ((createdProcesses < maximumProcesses) && (pidOfProcessChild == 0))
+	int processNumberToAssign = 2;
+	printf("| First process creation while loop reached. |\n"); // * DEBUG
+	while ((createdProcesses < N) && (pidOfProcessChild != 0))
 	{
+		printf("| First process creation while loop iterated. |\n| - Process ID of this process's child: %d |\n", pidOfProcessChild); // * DEBUG
 		pidOfProcessChild = fork();
 		createdProcesses++;
 
 		// Prepare the child process's variables
 		if (pidOfProcessChild == 0)
 		{
-			// Set this child process's own process information
-			processName = nextProcessName;
-			processNumber = nextProcessNumber;
-
-			// Prepare the information for which process should
-			// print after this child process
-			if (processName == "Popo")
-			{
-				// Set the next process as a Nana process
-				nextProcessName = "Nana";
-			}
-			else
-			{
-				// Set the next process as a Popo process
-				nextProcessName = "Popo";
-				if (createdProcesses == maximumProcesses)
-				{
-					// Set the next process number to one to
-					// restart the process printing sequence
-					nextProcessNumber = 1;
-				}
-				else
-					nextProcessNumber++;
-			}
-
-			// Place the decided next process's print line into the
-			// nextProcessPrintLine char string
-			nextProcessPrintLine = (nextProcessName, nextProcessNumberPointer); // * NOTE: May need to be corrected
+			// Set this child process's own process number
+			processInfo.processNumber = processNumberToAssign;
+		}
+		else
+		{
+			// Increment the process number to assign
+			processNumberToAssign++;
 		}
 	}
+
+	// * DEBUG
+	if (pidOfProcessChild == 0)
+	{
+		printf("| A child has left the first process creation while loop. |\n");
+	}
+	else
+		printf("| The parent process has left the first process creation while loop. |\n"); // * DEBUG END
+
+	// Create separate "Popo" and "Nana" processes
+	pidOfProcessChild = fork();
+	if (pidOfProcessChild != 0)
+		strcpy(processInfo.name, "Popo");
+	else
+		strcpy(processInfo.name, "Nana");
+
+	// Set the struct information for the process to print after the current
+	// process
+	if ((strcmp(processInfo.name, "Popo")) == 0)
+		strcpy(nextProcessInfo.name, "Nana");
+	else
+		strcpy(nextProcessInfo.name, "Popo");
+
+	if (processInfo.processNumber == N)
+		nextProcessInfo.processNumber = 1;
+	else
+		nextProcessInfo.processNumber = processInfo.processNumber + 1;
 
 	// Print each process's name and number in sequential order five times
 	while (printsRemaining > 0)
 	{
 		// View the program's shared memory to determine whether to
 		// print
-		ram = (char *) shmat(sharedMemoryId, NULL, SHM_RND);
+		ram = (struct structPrintInfo *) shmat(sharedMemoryId, NULL, SHM_RND);
 
-		if (ram == processPrintLine)
+		// * DEBUG
+//		sleep(1);
+//		printf("| Comparing ram -> name to processInfo.name and ram -> processNumber to processInfo.processNumber... |\n| - ram -> name: %s; |\n| - processInfo.name: %s; |\n| - ram -> processNumber: %d; |\n| - processInfo.processNumber: %d; |\n", ram -> name, processInfo.name, ram -> processNumber, processInfo.processNumber);
+//		if ((strcmp(ram -> name, processInfo.name)) == 0)
+//			printf("| Name match found! |\n");
+//		if (ram -> processNumber == processInfo.processNumber)
+//			printf("| Number match found! |\n"); // * DEBUG END
+
+		if (((strcmp(ram -> name, processInfo.name)) == 0) &&
+		    (ram -> processNumber == processInfo.processNumber))
 		{
+//			printf("| Printing if branch entered. |\n"); // * DEBUG
 			// Print this process's name and number
-			printf("%s %d", processName, processNumber); // * NOTE: This line may need to be corrected
+			printf("%s %d\n",
+			       processInfo.name,
+			       processInfo.processNumber); // * NOTE: This line may need to be corrected
 
 			// Reduce the number of remaining prints for this process
 			printsRemaining--;
 
 			// Set shared memory with the information for the next
 			// printing process
-			strcpy(ram, nextProcessPrintLine); // * NOTE: Refer to create.c
+			strcpy(ram -> name, nextProcessInfo.name); // * NOTE: Refer to create.c
+			ram -> processNumber = nextProcessInfo.processNumber;
 		}
 	}
 
 	// If this process was the final process to print, clean the shared
 	// memory
-	if ((processName == "Nana") && (processNumber == N))
+	if (((strcmp(processInfo.name, "Nana")) == 0) &&
+	    (processInfo.processNumber == N))
 	{
 		if ((shmctl(sharedMemoryId, IPC_RMID, NULL)) == -1)
 		{
@@ -166,6 +203,14 @@ int main(int argc, char *argv[])
 			// was not found
 			printf("The shared memory could not be removed.\n");
 		}
+	}
+
+	// If this process is the original process, sleep to ensure all output
+	// is formatted correctly
+	if (((strcmp(processInfo.name, "Popo")) == 0) &&
+            (processInfo.processNumber == 1))
+	{
+		sleep(6);
 	}
 
 	return 0;
