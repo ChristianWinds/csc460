@@ -153,7 +153,10 @@ int main(int argc, char *argv[])
 	else
 		strcpy(nextProcessInfo.name, "Popo");
 
-	if (processInfo.processNumber == N)
+	if ((strcmp(processInfo.name, "Popo")) == 0)
+		nextProcessInfo.processNumber = processInfo.processNumber;
+	else if (((strcmp(processInfo.name, "Nana")) == 0) &&
+		 (processInfo.processNumber == N))
 		nextProcessInfo.processNumber = 1;
 	else
 		nextProcessInfo.processNumber = processInfo.processNumber + 1;
@@ -163,7 +166,7 @@ int main(int argc, char *argv[])
 	{
 		// View the program's shared memory to determine whether to
 		// print
-		ram = (struct structPrintInfo *) shmat(sharedMemoryId, NULL, SHM_RND);
+// *		ram = (struct structPrintInfo *) shmat(sharedMemoryId, NULL, SHM_RND); // * DEBUG DISABLE TEST
 
 		// * DEBUG
 //		sleep(1);
@@ -197,11 +200,18 @@ int main(int argc, char *argv[])
 	if (((strcmp(processInfo.name, "Nana")) == 0) &&
 	    (processInfo.processNumber == N))
 	{
-		if ((shmctl(sharedMemoryId, IPC_RMID, NULL)) == -1)
+		printf("| Entered first shared memory removal if branch. |\n"); // * DEBUG
+		if (((strcmp(ram -> name, "Popo")) == 0) &&
+                    (ram -> processNumber == 1))
 		{
-			// Print an error message if the shared memory to remove
-			// was not found
-			printf("The shared memory could not be removed.\n");
+			printf("| Entered second shared memory removal if branch. |\n"); // * DEBUG
+			if ((shmctl(sharedMemoryId, IPC_RMID, NULL)) == -1)
+			{
+				printf("| Entered third shared memory removal if branch. |\n"); // * DEBUG
+				// Print an error message if the shared memory
+				// to remove was not found
+				printf("The shared memory could not be removed.\n");
+			}
 		}
 	}
 
