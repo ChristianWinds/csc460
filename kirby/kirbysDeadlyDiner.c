@@ -175,3 +175,24 @@ void eatCpuCycles(int maximumLoops)
 	int numberOfLoops;
 	for (numberOfLoops = 0; numberOfLoops < maximumLoops; numberOfLoops++);
 }
+
+p(int s,int sem_id)
+{
+struct sembuf sops;
+
+sops.sem_num = s;
+sops.sem_op = -1;
+sops.sem_flg = 0;
+if((semop(sem_id, &sops, 1)) == -1) printf("%s", "'P' error\n");
+}
+
+v(int s, int sem_id)
+{
+struct sembuf sops;
+
+sops.sem_num = s;
+sops.sem_op = 1;
+sops.sem_flg = 0;
+if((semop(sem_id, &sops, 1)) == -1) printf("%s","'V' error\n");
+}
+
