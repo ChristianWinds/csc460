@@ -172,7 +172,7 @@ void think(int guestNumber)
 	/*eatCpuCycles();*/ // * DEBUG: Temporary disable
 	int outerLoopsRun;
 	int innerLoopsRun;
-	int maximumLoops = 20000;
+	int maximumLoops = 15000;
 	for (outerLoopsRun = 0; outerLoopsRun < maximumLoops; outerLoopsRun++)
 	{
 		for (innerLoopsRun = 0; innerLoopsRun < maximumLoops; innerLoopsRun++)
@@ -247,7 +247,7 @@ void eat(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSe
 	}
 
 	// Place the left chopstick back into the chopsticks semaphore
-	v(rightChopstick, chopstickSemId);
+	v(leftChopstick, chopstickSemId);
 
 	// Place the right chopstick back into the chopsticks semaphore
 	v(rightChopstick, chopstickSemId);
