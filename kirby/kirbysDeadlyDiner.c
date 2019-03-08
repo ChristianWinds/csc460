@@ -169,8 +169,8 @@ void think(int guestNumber)
 	}
 
 	// Use several CPU cycles
-	/*eatCpuCycles();*/ // * DEBUG: Temporary disable
-	int outerLoopsRun;
+	eatCpuCycles();
+/*	int outerLoopsRun;
 	int innerLoopsRun;
 	int maximumLoops = 15000;
 	for (outerLoopsRun = 0; outerLoopsRun < maximumLoops; outerLoopsRun++)
@@ -179,7 +179,7 @@ void think(int guestNumber)
 		{
 			;
 		}
-	}
+	}*/ // * DEBUG: Temporary disable
 
 	if (debug)
 	{
@@ -234,8 +234,8 @@ void eat(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSe
 	printf("%d EATING\n", guestNumber);
 
 	// Use several CPU cycles
-	/*eatCpuCycles();*/ // * DEBUG: Temporary disable
-	int outerLoopsRun;
+	eatCpuCycles();
+/*	int outerLoopsRun;
 	int innerLoopsRun;
 	int maximumLoops = 20000;
 	for (outerLoopsRun = 0; outerLoopsRun < maximumLoops; outerLoopsRun++)
@@ -244,7 +244,7 @@ void eat(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSe
 		{
 			;
 		}
-	}
+	}*/ // * DEBUG: Temporary disable
 
 	// Place the left chopstick back into the chopsticks semaphore
 	v(leftChopstick, chopstickSemId);
@@ -253,7 +253,7 @@ void eat(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSe
 	v(rightChopstick, chopstickSemId);
 }
 
-/*void eatCpuCycles()
+void eatCpuCycles()
 {
 	// Postcondition: Several CPU cycles were used
 
@@ -279,7 +279,7 @@ void eat(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSe
 		     numberOfInnerLoopsRun < maximumInnerLoops;
 		     numberOfInnerLoopsRun++);
 	}
-}*/ // * DEBUG: Temporary disable
+}
 
 p(int s,int sem_id)
 {
