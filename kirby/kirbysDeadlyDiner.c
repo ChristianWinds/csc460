@@ -161,7 +161,7 @@ void think(int guestNumber)
 	}
 	
 	// Print this process's "(guest number) THINKING" line
-	printf("%d THINKING", guestNumber);
+	printf("%d THINKING\n", guestNumber);
 
 	if (debug)
 	{
@@ -204,7 +204,7 @@ void hunger(int guestNumber, int leftChopstick, int rightChopstick, int chopstic
 	}
 	
 	// Print this process's "(guest number) HUNGRY" line
-	printf("%d HUNGRY", guestNumber);
+	printf("%d HUNGRY\n", guestNumber);
 
 	// Acquire this process's left chopstick
 	p(leftChopstick, chopstickSemId);
@@ -231,7 +231,7 @@ void eat(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSe
 	}
 	
 	// Print this process's "(guest number) EATING" line
-	printf("%d EATING", guestNumber);
+	printf("%d EATING\n", guestNumber);
 
 	// Use several CPU cycles
 	/*eatCpuCycles();*/ // * DEBUG: Temporary disable
