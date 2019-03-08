@@ -10,8 +10,6 @@
 #include <sys/sem.h>
 #include <stdio.h>
 
-int debug = 0;
-
 // Set the number of chopsticks
 const int CHOPSTICKS = 5;
 
@@ -41,21 +39,10 @@ int main()
 
 	// Initialize each of the chopstick semaphores
 	int semaphoreIndex;
-
-	if (debug)
-	{
-		printf("* Entering semaphores initialization loop.\n");
-	}
-
 	for (semaphoreIndex = 0; semaphoreIndex < CHOPSTICKS; semaphoreIndex++)
 	{
 		// Initialize the current semaphore
 		semctl(chopstickSemId, semaphoreIndex, SETVAL, 1);
-	}
-
-	if (debug)
-	{
-		printf("* All chopstick semaphores initialized.\n");
 	}
 
 	// Create an integer variable of this process's guest number
@@ -67,11 +54,6 @@ int main()
 	// Create an integer variable to track the total number of existing
 	// processes
 	int totalProcesses = 1;
-
-	if (debug)
-	{
-		printf("* Pre-process creation while loop.\n");
-	}
 
 	// Create four additional processes
 	while (totalProcesses < MAXDINNERGUESTS)
@@ -92,50 +74,17 @@ int main()
 		}
 	}
 
-	if (debug)
-	{
-		printf("* Process creation while loop completed; processIdOfChild: %d\n", processIdOfChild);
-	}
-
 	// Determine the semaphores corresponding to this process's left and
 	// right chopsticks
 	int leftChopstick = guestNumber;
 	int rightChopstick = (guestNumber + 1) % MAXDINNERGUESTS;
 
-	if (debug)
-	{
-		printf("* Left and right chopsticks determined; processIdOfChild: %d\n", processIdOfChild);
-	}
-
 	// Enter an infinite loop of the Dining Philosophers problem
 	while (1)
 	{
-		if (debug)
-		{
-			printf("* Infinite while loop iterated; processIdOfChild: %d; guestNumber: %d\n", processIdOfChild, guestNumber);
-		}
-
 		think(guestNumber);
-
-		if (debug)
-		{
-			printf("* think process completed; processIdOfChild: %d; guestNumber: %d\n", processIdOfChild, guestNumber);
-		}
-
 		hunger(guestNumber, leftChopstick, rightChopstick, chopstickSemId);
-
-		if (debug)
-		{
-			printf("* hunger process completed; processIdOfChild: %d; guestNumber: %d\n", processIdOfChild, guestNumber);
-		}
-
 		eat(guestNumber, leftChopstick, rightChopstick, chopstickSemId);
-
-		if (debug)
-		{
-			printf("* eat process completed; processIdOfChild: %d; guestNumber: %d\n", processIdOfChild, guestNumber);
-		}
-
 	}
 
 	return 0;
@@ -148,11 +97,6 @@ void think(int guestNumber)
 	// 		  column that corresponds to this process's guest
 	// 		  number; several CPU cycles will also have been used
 
-	if (debug)
-	{
-		printf("* think(): think processs entered; guestNumber: %d\n", guestNumber);
-	}
-
 	// Print a number of tabs matching this process's guest number
 	int tabsPrinted;
 	for (tabsPrinted = 0; tabsPrinted < guestNumber; tabsPrinted++)
@@ -163,28 +107,8 @@ void think(int guestNumber)
 	// Print this process's "(guest number) THINKING" line
 	printf("%d THINKING\n", guestNumber);
 
-	if (debug)
-	{
-		printf("* think(): About to call eatCpuCycles; guestNumber: %d\n", guestNumber);
-	}
-
 	// Use several CPU cycles
 	eatCpuCycles();
-/*	int outerLoopsRun;
-	int innerLoopsRun;
-	int maximumLoops = 15000;
-	for (outerLoopsRun = 0; outerLoopsRun < maximumLoops; outerLoopsRun++)
-	{
-		for (innerLoopsRun = 0; innerLoopsRun < maximumLoops; innerLoopsRun++)
-		{
-			;
-		}
-	}*/ // * DEBUG: Temporary disable
-
-	if (debug)
-	{
-		printf("* think(): think processs ending; guestNumber: %d\n", guestNumber);
-	}
 }
 
 void hunger(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSemId)
@@ -235,16 +159,6 @@ void eat(int guestNumber, int leftChopstick, int rightChopstick, int chopstickSe
 
 	// Use several CPU cycles
 	eatCpuCycles();
-/*	int outerLoopsRun;
-	int innerLoopsRun;
-	int maximumLoops = 20000;
-	for (outerLoopsRun = 0; outerLoopsRun < maximumLoops; outerLoopsRun++)
-	{
-		for (innerLoopsRun = 0; innerLoopsRun < maximumLoops; innerLoopsRun++)
-		{
-			;
-		}
-	}*/ // * DEBUG: Temporary disable
 
 	// Place the left chopstick back into the chopsticks semaphore
 	v(leftChopstick, chopstickSemId);
