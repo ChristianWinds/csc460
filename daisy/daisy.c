@@ -12,10 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 
-const int debug = 0;
-
-const int clockDebug = 0;
-
 // Set the maximum number of dinner guests
 #define MAXDINNERGUESTS 5
 
@@ -34,7 +30,7 @@ const int clockDebug = 0;
 // Set the semaphore value that represents a "eating" state
 #define EATING 2
 
-// Set the semaphore value that represents a "eating" state
+// Set the semaphore value that represents a "done" state
 #define DONE 3
 
 int think(int guestNumber,
@@ -63,18 +59,12 @@ int main()
 	int sharedMemoryClockId = shmget(IPC_PRIVATE, sizeof(int), 0764);
 
 	// Access the shared memory clock
-	int* sharedMemoryClock = (int*) shmat(sharedMemoryClockId,
+	int *sharedMemoryClock = (int*) shmat(sharedMemoryClockId,
 					      NULL,
-					      SHM_RND); // * DEBUG: Possibly CORRECT
+					      SHM_RND);
 
 	// Set the shared memory clock to zero
 	*sharedMemoryClock = 0;
-
-
-	if (clockDebug)
-	{
-		printf("main: Attempted to set shared memory clock to zero.\nsharedMemoryClock = 0; compiles and runs.\n");
-	}
 
 	// Create an array to hold the states of the five dinner guest processes
 	int dinnerGuestStateArray[5];
@@ -107,22 +97,15 @@ int main()
 	// Ensure the dinner guests semaphore was created properly
 	if (dinnerGuestsSemId == -1)
 	{
-		// Report that the chopsticks semaphore creation had not
+		// Report that the dinner guests semaphore creation had not
 		// succeeded, then end the program
 		printf("The dinner guests semaphore could not be created ");
 		printf("correctly.\n");
 		return (-1);
 	}
 
-/*	// Initialize each of the chopstick semaphores
-	int semaphoreIndex;
-	for (semaphoreIndex = 0; semaphoreIndex < CHOPSTICKS; semaphoreIndex++)
-	{
-		// Initialize the current semaphore
-		semctl(chopstickSemId, semaphoreIndex, SETVAL, 1);
-	}*/ // * DEBUG: May be removable
-
-	// Create an integer variable of this process's guest number
+	// Create an integer variable to hold the dinner guest process guest
+	// number
 	int guestNumber = 0;
 
 	// Create an integer variable to hold each process's child's process ID
@@ -132,25 +115,13 @@ int main()
 	// dinner guest processes
 	int dinnerGuests = 0;
 
-	// Create four additional processes
+	// Create five dinner guest processes
 	while (dinnerGuests < MAXDINNERGUESTS)
 	{
-		if (debug)
-		{
-			printf("main: Number of dinnerGuests (before dinnerGuests++): %d\n",
-			       dinnerGuests);
-		}
-
-		// Create a new process
+		// Create a new dinner guest process
 		processIdOfChild = fork();
 
 		dinnerGuests++;
-
-		if (debug)
-		{
-			printf("main: Number of dinnerGuests (after dinnerGuests++): %d;\nprocessIDOfChild: %d\n",
-			       dinnerGuests, processIdOfChild);
-		}
 
 		// If the current process is a child process, modify the
 		// process's guest number and leave the process creation loop
@@ -159,12 +130,7 @@ int main()
 			// Change the process's guest number
 			guestNumber = dinnerGuests - 1;
 
-			if (debug)
-			{
-				printf("main: Created guest (guestNumber) %d\n",
-				       guestNumber);
-			}
-
+			// Leave the dinner guest process creation loop
 			break;
 		}
 	}
@@ -173,21 +139,17 @@ int main()
 	// main program
 	if (processIdOfChild == 0)
 	{
-		/*// Determine the semaphores corresponding to the dinner guests
-		// to the left and right of this process's dinner guest
-		int leftGuest = (guestNumber + MAXDINNERGUESTS - 1) %
-				 MAXDINNERGUESTS;
-		int rightGuest = (guestNumber + 1) % MAXDINNERGUESTS;*/ // * DEBUG: Disable
-
-		// Create an integer variable to track whether the process is in
-		// a "done" state; initialize the variable to 0
+		// Create an integer variable to track whether the dinner guest
+		// process is in a "done" state; initialize the variable to 0
 		int processDone = 0;
 
 		// Enter a loop of the Dining Philosophers problem for at least
 		// 100 seconds
 		while (processDone == 0)
 		{
-			// Think for five to fifteen seconds
+			// Think for five to fifteen seconds, and check whether
+			// at least 100 seconds of the Dining Philosophers loop
+			// have run
 			processDone = think(guestNumber, 
 					    sharedMemoryClockId,
 					    guestStateArraySharedMemId);
@@ -204,11 +166,11 @@ int main()
 			retrieveChopsticks(guestNumber,
 					   mutexSemId,
 					   dinnerGuestsSemId,
-					   guestStateArraySharedMemId/*,
-					   leftGuest,
-					   rightGuest*/);
+					   guestStateArraySharedMemId);
 
-			// Eat for one to three seconds
+			// Eat for one to three seconds, and check whether at
+			// least 100 seconds of the Dining Philosophers loop
+			// have passed
 			processDone = eat(guestNumber,
 					  sharedMemoryClockId,
 					  guestStateArraySharedMemId);
@@ -231,32 +193,16 @@ int main()
 	else
 	{
 		// Attach to the dinner guest state shared memory
-		int* guestState = (int*) shmat(guestStateArraySharedMemId,
+		int *guestState = (int*) shmat(guestStateArraySharedMemId,
 					       NULL,
-					       SHM_RND); // * DEBUG: Possibly CORRECT
-
-		if (clockDebug)
-		{
-			printf("main: int* guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND); run\n");
-		}
-
-		// Create a char array to hold the names of the process states
-		char *processStatesAsStrings[MAXDINNERGUESTS];
-
-		if (clockDebug)
-		{
-			printf("main: char *processStatesAsStrings[MAXDINNERGUESTS]; run\n");
-		}
+					       SHM_RND);
 
 		// Create a char string variable to hold a state's name
 		char currentGuestStateString[9];
 
-		if (clockDebug)
-		{
-			printf("main: char currentGuestStateString[9]; run\n");
-		}
-
-		// Create an integer variable that tracks whether all dining guest processes are not in "done" states; initialize the variable to 1
+		// Create an integer variable that tracks whether all dining
+		// guest processes are not in "done" states; initialize the
+		// variable to 1
 		int dinnerGuestsActive = 1;
 
 		// Run the program until all dinner guest processes enter a
@@ -266,32 +212,16 @@ int main()
 			// Enter this process's critical section
 			p(0, mutexSemId);
 
-			if (clockDebug)
-			{
-				printf("main: p(0, mutexSemId); run\n");
-			}
-
-
 			// Prepare an integer variable to track the current
 			// dinner guest process whose state is being read
 			int currentDinnerGuest;
-
-			if (clockDebug)
-			{
-				printf("main: int currentDinnerGuest; run\n");
-			}
 
 			// Prepare an integer variable to use to hold a dinner
 			// guest's state integer
 			int currentGuestStateInt;
 
-			if (clockDebug)
-			{
-				printf("main: int currentGuestStateInt; run\n");
-			}
-
-			// Create char string variables for each of the four
-			// dinner guest process state strings
+			// Create char string variables for the states of each
+			// of the five dinner guest processes
 			char guest0StateString[9];
 			char guest1StateString[9];
 			char guest2StateString[9];
@@ -306,44 +236,23 @@ int main()
 				// Read the current dinner guest's state
 				currentGuestStateInt = guestState[currentDinnerGuest];
 
-				if (clockDebug)
-				{
-					printf("main: currentGuestStateInt = guestState[currentDinnerGuest]; run\n");
-				}
-
 				// Store the string translation of the current
 				// dinner guest's current state
 				if (currentGuestStateInt == THINKING)
 				{
 					strcpy(currentGuestStateString, "thinking");
-					if (clockDebug)
-					{
-						printf("main: strcpy(currentGuestStateString, \"thinking\"); run\n");
-					}
 				}
 				else if (currentGuestStateInt == HUNGRY)
 				{
-					strcpy(currentGuestStateString, "hungry");
-					if (clockDebug)
-					{
-						printf("main: strcpy(currentGuestStateString, \"hungry\"); run\n");
-					}
+					strcpy(currentGuestStateString, "hungry  ");
 				}
 				else if (currentGuestStateInt == EATING)
 				{
-					strcpy(currentGuestStateString, "eating");
-					if (clockDebug)
-					{
-						printf("main: strcpy(currentGuestStateString, \"eating\"); run\n");
-					}
+					strcpy(currentGuestStateString, "eating  ");
 				}
 				else if (currentGuestStateInt == DONE)
 				{
-					strcpy(currentGuestStateString, "done");
-					if (clockDebug)
-					{
-						printf("main: strcpy(currentGuestStateString, \"done\"); run\n");
-					}
+					strcpy(currentGuestStateString, "done    ");
 				}
 				
 				// Copy the current dinner guest process's state
@@ -389,11 +298,6 @@ int main()
 			// Leave this process's critical section
 			v(0, mutexSemId);
 
-			if (clockDebug)
-			{
-				printf("main: v(0, mutexSemId); run\n");
-			}
-
 			// Print the states of the five dinner guests
 			printf("%d. %s\t %s\t %s\t %s\t %s\n",
 			       *sharedMemoryClock,
@@ -403,18 +307,13 @@ int main()
 			       guest3StateString,
 			       guest4StateString);
 
-			if (clockDebug)
-                        {
-                                printf("main: printf statement run\n");
-			}
-
 			// If all five dinner guest processes are in "done"
 			// states, begin to end the program
-			if ( (strcmp (guest0StateString, "done") == 0) &&
-			     (strcmp (guest1StateString, "done") == 0) &&
-			     (strcmp (guest2StateString, "done") == 0) &&
-			     (strcmp (guest3StateString, "done") == 0) &&
-			     (strcmp (guest4StateString, "done") == 0) )
+			if ( (strcmp (guest0StateString, "done    ") == 0) &&
+			     (strcmp (guest1StateString, "done    ") == 0) &&
+			     (strcmp (guest2StateString, "done    ") == 0) &&
+			     (strcmp (guest3StateString, "done    ") == 0) &&
+			     (strcmp (guest4StateString, "done    ") == 0) )
 			{
 				// Flag that all dinner guest processes are
 				// complete
@@ -427,18 +326,8 @@ int main()
 			// Sleep for one second	
 			sleep (1);
 
-			if (clockDebug)
-			{
-				printf("main: sleep (1); run\n");
-			}
-
-			// Increment the clock one second
+			// Increment the clock by one second
 			*sharedMemoryClock = *sharedMemoryClock + 1;
-
-			if (clockDebug)
-			{
-				printf("main: Current clock time (After increment): %d\n", *sharedMemoryClock);
-			}
 		}
 
 		// Clean the clock shared memory
@@ -482,36 +371,27 @@ int think(int guestNumber,
 	  int guestStateArraySharedMemId)
 {
 	// Postcondition: The process that called this function slept for five
-	// 		  to fifteen seconds
-
-	if (debug)
-	{
-		printf("think: Guest %d is going to think. (Before sleeping).\n",
-		        guestNumber);
-	}
+	// 		  to fifteen seconds, and if at least 100 seconds of the
+	// 		  Dining Philosophers loop had run, a 1 was returned to
+	// 		  this process's caller. If 100 seconds of the Dining
+	// 		  Philosophers loop had not yet run, a 0 was returned to
+	// 		  this function's caller instead.
 
 	// Sleep for five to fifteen seconds
 	sleepForRandomLength(5, 15);
 
-	if (debug)
-	{
-		printf("think: Guest %d has thought. (Sleep ended)\n", guestNumber);
-	}
-
 	// Prepare the process to end if over 100 seconds of the Dining
 	// Philosophers loop have passed
-	int processDone = checkIfTimeIsReached(100, sharedMemoryClockId); // * DEBUG: Development disable; Reenable for complete program test
-
-/*	int processDone = 0; // * DEBUG: Temporary placeholder*/
+	int processDone = checkIfTimeIsReached(100, sharedMemoryClockId);
 
 	// If the program's minimum dining philosophers run time has been
 	// reached, set this process's state to "done"
 	if (processDone)
 	{
 		// Attach to the dinner guest state shared memory
-		int* guestState = (int*) shmat(guestStateArraySharedMemId,
+		int *guestState = (int*) shmat(guestStateArraySharedMemId,
 					       NULL,
-					       SHM_RND); // * DEBUG: Possibly CORRECT
+					       SHM_RND);
 
 		// Set this process's state to "done"
 		guestState[guestNumber] = DONE;
@@ -526,116 +406,66 @@ void retrieveChopsticks(int guestNumber,
 			int dinnerGuestsSemId,
 			int guestStateArraySharedMemId)
 {
-	// Postcondition: The state of the process that called this function was
-	// 		  set to "hungry"
-
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: begun\n", guestNumber);
-	}
+	// Postcondition: The state of the dining guest process that called this
+	// 		  function was set to "hungry", and this function's
+	// 		  caller received two chopsticks
 
 	// Begin this function's critical section
 	p(0, mutexSemId);
 	
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: p(0, mutexSemId); run\n", guestNumber);
-	}
-
-	// Create an array to permit access to the dinner guest state array in shared memory
+	// Create an array to permit access to the dinner guest state array in
+	// shared memory
 	int *dinnerGuestStateArray[5];
 
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: int *dinnerGuestStateArray[5]; run\n", guestNumber);
-	}
-
 	// Attach to the dinner guest state shared memory
-	/*char*//*int *ram;*/ // * DEBUG: Temporary disable; may be incorrect
-//	ram = (/*char*/int )/* * */dinnerGuestStateArray[5] shmat (guestStateArraySharedMemId,
-//						      NULL,
-//						      SHM_RND); // * DEBUG: Temporary disable
-	int* guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND); // * DEBUG: Possibly CORRECT
-
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: int* guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND); run\n", guestNumber);
-	}
+	int *guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND);
 
 	// Update this process's state to "hungry"
-	/*strcpy (ram[guestNumber], "hungry");*/ // * DEBUG: Development disable; May be needed if strcpy is necessary
 	guestState[guestNumber] = HUNGRY;
-
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: ram[guestNumber] = HUNGRY; run\n", guestNumber);
-	}
 
 	// Attempt to acquire this process's two chopsticks
 	test(guestNumber, guestStateArraySharedMemId, dinnerGuestsSemId);
 
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: test(guestNumber, guestStateArraySharedMemId, dinnerGuestsSemId); run\n", guestNumber);
-	}
-
 	// Leave the critical section
 	v(0, mutexSemId);
 
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: v(0, mutexSemId); run\n", guestNumber);
-	}
-
 	// If this guest's chopsticks were not obtained, block the guest's process
 	p(guestNumber, dinnerGuestsSemId);
-
-	if (debug)
-	{
-		printf("guestNumber %d: retrieveChopsticks: p(guestNumber, dinnerGuestsSemId); run\nguestNumber %d: retrieveChopsticks: colcluded; ending function...\n", guestNumber, guestNumber);
-	}
 }
 
 int eat(int guestNumber,
 	int sharedMemoryClockId,
 	int guestStateArraySharedMemId)
 {
+	// Precondition: The dining guest process that called this function held
+	// 		 that process's two chopsticks
 	// Postcondition: The process that called this function slept for one to
-	// 		  three seconds, then returned a 1 if the dining
-	// 		  philosophers loop ran for at least 100 seconds. A 0
-	// 		  was returned if the dining philosophers loop has not
-	// 		  yet run for 100 seconds.
-
-	if (debug)
-	{
-		printf("eat: Guest %d will eat. (Before sleeping)\n", guestNumber);
-	}
+	// 		  three seconds, then this function returned a 1 if the
+	// 		  dining philosophers loop ran for at least 100 seconds.
+	// 		  A 0 was instead returned by this function if the
+	// 		  dining philosophers loop had not yet run for 100
+	// 		  seconds.
 
 	// Sleep for one to three seconds
 	sleepForRandomLength(1, 3);
 
-	if (debug)
-	{
-		printf("think: Guest %d has eaten. (Sleep ended)\n", guestNumber);
-	}
-
-	// Prepare the process to end if over 100 seconds of the Dining
-	// Philosophers loop have passed
-	int processDone = checkIfTimeIsReached(100, sharedMemoryClockId); // * DEBIG: Temporary disable; reenable for full program test
-
-	/*int processDone = 0; // * DEBUG: Temporary placeholder code*/
+	// Prepare the process to end if over 100 seconds of the dining
+	// philosophers loop have passed
+	int processDone = checkIfTimeIsReached(100, sharedMemoryClockId);
 
 	// If the program's minimum dining philosophers run time has been
-	// reached, set this process's state to "done"
+	// reached, set the current process's state to "done"
 	if (processDone)
 	{
 		// Attach to the dinner guest state shared memory
-		int* guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND); // * DEBUG: Possibly CORRECT
+		int *guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND);
 
 		// Set this process's state to "done"
 		guestState[guestNumber] = DONE;
 	}
 
+	// Return the integer representing whether the current process is in a
+	// "done" state
 	return processDone;
 }
 
@@ -643,58 +473,23 @@ void test(int guestNumber, int guestStateArraySharedMemId, int dinnerGuestsSemId
 {
 	// Postcondition: The dinner guest process that reached this function
 	// 		  entered an "eating" state if the processes left and
-	// 		  right of the arrived dinner guest are not in "eating"
+	// 		  right of the arrived dinner guest were not in "eating"
 	// 		  states
 
-/*	// Create a dinner guest state char array to permit access to
-	// the dinner guest state shard memory
-	char *dinnerGuestStateArray[5];
-
-	// Attach to the dinner guest state shared memory
-	char *ram;
-	ram = (char *dinnerGuestStateArray[5]) shmat (guestStateArraySharedMemId,
-						      NULL,
-						      SHM_RND);
-
-	// Retrieve the dinner guest state strings required for the chopstick
-	// presence check
-	char *leftGuestState;
-	strcpy(leftGuestState, ram[LEFT]);
-
-	char *rightGuestState;
-	strcpy(rightGuestState, ram[RIGHT]);
-
-	char *currentGuestState;
-	strcpy(currentGuestState, ram[guestNumber]); */ // * DEBUG: Development disable; may be unneeded
-
-	// Update the arrived dinner guest process's state to "eating" if the
-	// processes to the left and right of the arrived process are not in
-	// "eating" states
-/*	if ((strcmp (currentGuestState, "hungry") == 0) &&
-	    ((strcmp(leftGuestState, "eating") != 0) && (strcmp(rightGuestState, "eating") != 0) )) */ // * DEBUG: Development disable; may be unneeded
-
 	// Create a dinner guest integer array to permit access to
-	// the dinner guest state shard memory
+	// the dinner guest state shared memory
 	int *dinnerGuestStateArray[5];
 
 	// Attach to the dinner guest state shared memory
-	int *ram;
-	/*ram = (int *dinnerGuestStateArray[5]) shmat (guestStateArraySharedMemId,
-						     NULL,
-						     SHM_RND);*/ // * DEBUG: Disabled; may be incorrect
-	int* guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND); // * DEBUG: Possibly CORRECT
+	int *guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND);
 
 	// Update the arrived dinner guest process's state to "eating" if the
 	// processes to the left and right of the arrived process are not in
 	// "eating" states
-/*	if (ram[guestNumber] == HUNGRY) &&
-	   ((ram[LEFT] != EATING) && (ram[RIGHT] != EATING))*/ // * DEBUG: May be incorrect
 	if ((guestState[guestNumber] == HUNGRY) &&
 	   ((guestState[LEFT] != EATING) && (guestState[RIGHT] != EATING)))
 	{
 		// Update this process's state to "eating"
-		/*strcpy (ram[guestNumber], "eating"); */ // * DEBUG: Development disable; may be unneeded unless string copy is required
-		/*ram[guestNumber] = EATING;*/ // * DEBUG: May be incorrect
 		guestState[guestNumber] = EATING;
 
 		// Awake a blocked dinner guest process if any dinner guest
@@ -708,8 +503,12 @@ void placeChopsticks(int guestNumber,
 		     int guestStateArraySharedMemId,
 		     int dinnerGuestsSemId)
 {
-	// Postcondition: The process that arrived at this function was placed
-	// 		  into a "thinking" state,
+	// Postcondition: The dinner guest process that arrived at this function
+	// 		  was placed into a "thinking" state, and at least one
+	// 		  of the dinner guest processes at this function's
+	// 		  caller process's left and right was placed into an
+	// 		  "eating" state if a pair of chopsticks was available
+	// 		  for the process
 
 	// Begin this function's critical section
 	p(0, mutexSemId);
@@ -718,14 +517,9 @@ void placeChopsticks(int guestNumber,
 	char *dinnerGuestStateArray[5];
 
 	// Attach to the dinner guest state shared memory
-/*	char *ram;*/ // * DEBUG: Disabled; may be incorrect
-/*	ram = (char *dinnerGuestStateArray[5]) shmat (guestStateArraySharedMemId,
-						      NULL,
-						      SHM_RND); */ // * DEBUG: Disable; May be incorrect
-	int* guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND); // * DEBUG: Possibly CORRECT
+	int *guestState = (int*) shmat(guestStateArraySharedMemId, NULL, SHM_RND);
 
-	// Update this process's state to "thinking"
-/*	strcpy (ram[guestNumber], "thinking");*/ // * DEBUG: Disabled; may be incorrect
+	// Update the current process's state to "thinking"
 	guestState[guestNumber] = THINKING;
 
 	// Determine if the left dinner guest may begin eating
@@ -740,8 +534,8 @@ void placeChopsticks(int guestNumber,
 
 int checkIfTimeIsReached(int timeMinimum, int sharedMemoryClockId)
 {
-	// Postcondition: If the shared memory clock's time is the received
-	// 		  minimum time or more when this function checks the
+	// Postcondition: If the shared memory clock's time was the received
+	// 		  minimum time or more when this function checked the
 	// 		  clock, a 1 was returned to this function's caller
 
 	// Create an integer variable to represent whether the minimum time has
@@ -749,7 +543,9 @@ int checkIfTimeIsReached(int timeMinimum, int sharedMemoryClockId)
 	int timeReached;
 
 	// Access the shared memory clock
-	int* sharedMemoryClock = (int*) shmat(sharedMemoryClockId, NULL, SHM_RND); // * DEBUG: Possibly CORRECT
+	int *sharedMemoryClock = (int*) shmat(sharedMemoryClockId,
+					      NULL,
+					      SHM_RND);
 
 	if (*sharedMemoryClock >= timeMinimum)
 	{
