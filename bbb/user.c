@@ -12,37 +12,56 @@
 #include <stdio.h>
 #include <string.h>
 
-struct userInformation
+struct jobInformation
 {
 	int processID;
+	int cpuRequest;
 	int neededTime;
 };
 
+struct clockStruct
+{
+	int clock;
+};
+
 void endSimulation();
-int think();
-int sendCpuRequest();
+int think(int endProgramSharedMemoryId);
+int sendCpuRequest(int clockSharedMemoryId,
+		   int endProgramSharedMemoryId);
+int checkForSimulationEnd(int endProgramSharedMemoryId);
 
 int main(int argc, char *argv[])
 {
-	// Open the cpuSharedMemory file for reading
+	// Open the shared memory ID and semaphore ID file for reading
         FILE *fopen(), *filePointer;
-        if ((filePointer = fopen("cpuSharedMemory","r")) == NULL)
+        if ((filePointer = fopen("memoryIdFile","r")) == NULL)
         {
-        	// Report that the cpuSharedMemory file could
+        	// Report that the memoryIdFile file could
                 // not be found, then end the program
-                printf("The cpuSharedMemory file could not ");
+                printf("The memoryIdFile file could not ");
                 printf("be found.\n");
                 return 0;
         }
 
 	// Receive copies of the CPU simulation's semaphore IDs
-	memoryIdFile
+	int fullSemaphoreId;
+	(filePointer, "%d", &fullSemaphoreId);
+
+	int emptySemaphoreId;
+	(filePointer, "%d", &emptySemaphoreId);
 
 	// Receive copies of the CPU simulation's shared memory IDs
-	memoryIdFile
+	int clockSharedMemoryId;
+	(filePointer, "%d", &clockSharedMemoryId);
 
-	// Attach to the CPU's shared memory
+	int readyQueueSharedMemoryId;
+	fscanf(filePointer, "%d", &readyQueueSharedMemoryId);
 
+	int endProgramSharedMemoryId;
+	fscanf(filePointer, "%d", &endProgramSharedMemoryId);
+
+	// End access to the shared memory ID and semaphore ID file
+	fclose(filePointer);
 
 	// Ensure a number was entered on the command line
 	if (argc < 2)
@@ -55,11 +74,13 @@ int main(int argc, char *argv[])
 	}
 
 	// Obtain a value for N from the command line
+	int N = atoi(argv[1]);
 
 	// End the CPU simulation if the entered N value is zero; otherwise,
 	// create a new job and send the job to the simulated CPU
 	if (N == 0)
 	{
+		// Prepare the CPU simulation to end
 		endSimulation();
 	}
 	else
@@ -79,7 +100,7 @@ int main(int argc, char *argv[])
 		for (sentRequests = 0; sentRequests < N; sentRequests++)
 		{
 			// Think for two to ten seconds
-			endProgram = think();
+			endProgram = think(endProgramSharedMemoryId);
 
 			// If the program should end, end the program properly
 			if (endProgram)
@@ -90,6 +111,14 @@ int main(int argc, char *argv[])
 
 			// Create and send a CPU request
 			sendCpuRequest();
+
+			// If the program should end, end the program properly
+			if (endProgram)
+			{
+				// Properly prepare the program to end
+				runProgramEndProcedure();
+			}
+
 		}
 	}
 
@@ -101,9 +130,10 @@ void endSimulation()
 	// Postcondition: The CPU simulation was concluded, cleaning all
 	// 		  semaphores and shared memory used by the simulation
 
+	;
 }
 
-int think()
+int think(int endProgramSharedMemoryId)
 {
         // Postcondition: The program printed a length of seconds for which the
         // 		  program would sleep, then slept from two to ten
@@ -125,27 +155,52 @@ int think()
 
         // Prepare the process to end if a simulation end request has been
         // delivered
-        int endSimulation = checkForSimulationEnd();
+        int endSimulation = checkForSimulationEnd(endProgramSharedMemoryId);
 
         // Return the integer of whether the process should end
         return endSimulation;
 }
 
-int sendCpuRequest()
+int sendCpuRequest(int clockSharedMemoryId,
+                   int endProgramSharedMemoryId)
 {
 	// Postcondition: A CPU request was sent to the simulated CPU and either
 	// 		  the sent CPU request completed, or the user program
 	// 		  began to end the CPU simulation after detecting a
 	// 		  simulation closure request
 
+	// Prepare a random number generator
+	time_t timeVariable;
+	srand((unsigned) time(&timeVariable));
+
+	// Create a CPU time requirement, C, from one to five
+
+	// Create a struct of the job request
+	struct jobInformation job;
+
+	// Access the clock shared memory
+	struct clockStruct *ram;
+	ram = (int clockStruct *) shmat(clockSharedMemoryId, NULL, SHM_RND);
+
 	// Acquire a copy of the current shared memory clock time
-	;
+	int preRequestTime;
+	preRequestTime = ram -> clock;
 
 	// When space exists in the job queue, place this program's job into the
 	// job queue
-	p();
+	p(empty);
+
+	
 
 	return endSimulation;
+}
+
+int checkForSimulationEnd()
+{
+	// Postcondition: If the CPU simulation should end, a 1 was returned to
+	// 		  this function's caller
+
+	;
 }
 
 p(int s,int sem_id)
