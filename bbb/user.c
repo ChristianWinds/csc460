@@ -14,8 +14,9 @@
 
 struct jobInformation
 {
-	int processID;
+	int processId;
 	int cpuRequest;
+	int initialClockTime;
 	int neededTime;
 };
 
@@ -173,10 +174,17 @@ int sendCpuRequest(int clockSharedMemoryId,
 	time_t timeVariable;
 	srand((unsigned) time(&timeVariable));
 
-	// Create a CPU time requirement, C, from one to five
-
 	// Create a struct of the job request
 	struct jobInformation job;
+
+	// Create a CPU time requirement, C, from one to five
+	int C = (rand() % (5 - 1)) + 1;
+
+	// Set the process ID of the job request
+	job -> processId = getpid();
+
+	// Set the CPU request value of the job request
+	job -> cpuRequest = C;
 
 	// Access the clock shared memory
 	struct clockStruct *ram;
@@ -186,21 +194,47 @@ int sendCpuRequest(int clockSharedMemoryId,
 	int preRequestTime;
 	preRequestTime = ram -> clock;
 
+	// Set the initial clock time of the current job request
+	job -> initialClockTime = preRequestTime;
+
+	// Set the job's needed time
+	job -> neededTime = C;
+
 	// When space exists in the job queue, place this program's job into the
 	// job queue
 	p(empty);
 
-	
+	// Place the job into the job queue
+	;
+
+	// Wait for the job to end
+	p(jobComplete);
+
+	// Check to determine if the CPU simulation should end
+	endSimulation = checkForSimulationEnd(endProgramSharedMemoryId);
+
+	v(full);
 
 	return endSimulation;
 }
 
-int checkForSimulationEnd()
+int checkForSimulationEnd(int endProgramSharedMemoryId)
 {
 	// Postcondition: If the CPU simulation should end, a 1 was returned to
 	// 		  this function's caller
 
-	;
+	// Create a value to represent whether the CPU simulation should end,
+	// and initialize the value to zero
+	int endSimulation = 0;
+
+	// Record a "1" in endSimulation if the CPU simulation should end
+	if ()
+	{
+		endSimulation = 1;
+	}
+
+	// Return the value representing whether the CPU simulation should end
+	return endSimulation;
 }
 
 p(int s,int sem_id)
